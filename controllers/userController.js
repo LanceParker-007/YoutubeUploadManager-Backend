@@ -63,8 +63,6 @@ export const login = asyncHandler(async (req, res) => {
 
 //Get all users
 export const searchUser = asyncHandler(async (req, res, next) => {
-  console.log(req.query.search);
-
   const keyword = req.query.search
     ? {
         $or: [
@@ -73,8 +71,6 @@ export const searchUser = asyncHandler(async (req, res, next) => {
         ],
       }
     : {};
-
-  console.log(keyword.$or[0].name);
 
   const users = await User.find({
     ...keyword,

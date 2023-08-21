@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "name": "YUM-backend_v1",
+  "builds": [{ "src": "server.js", "use": "@vercel/node" }],
+  "routes": [{ "src": "/(.*)", "dest": "/server.js" }]
+}

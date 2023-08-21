@@ -7,7 +7,14 @@ import {
   renameWorkspace,
   addToWorkspace,
   removeFromWorkspace,
+  uploadVideoToYUM,
+  allvideos,
+  uploadVideoToYoutube,
 } from "../controllers/workspaceController.js";
+import singleUpload from "../middleware/multer.js";
+//
+import multer from "multer";
+const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
@@ -29,9 +36,15 @@ router.route("/addusertoworkspace").put(protect, addToWorkspace);
 //Remove User from Workspace
 router.route("/removeuserfromworkspace").put(protect, removeFromWorkspace);
 
-//Search Workspaces API
+//Upload Video Details to YUM
+router.route("/upload/:id").post(protect, singleUpload, uploadVideoToYUM);
 
-//Upload Video Details API
+//Fetch all videos of workspace
+router.route("/allvideos/:id").get(protect, allvideos);
 
-//Upload Video to youtube API
+//Upload Video to youtube API, protect lagana hai
+router
+  .route("/uploadvideotoyoutube")
+  .post(upload.single("video"), uploadVideoToYoutube);
+
 export default router;

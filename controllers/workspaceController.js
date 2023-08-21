@@ -1,7 +1,13 @@
 import asyncHandler from "express-async-handler";
-import { User } from "../models/User.js";
 import { Workspace } from "../models/Workspace.js";
+import getDataUri from "../utils/dataUri.js";
+import cloudinary from "cloudinary";
+import { google } from "googleapis";
+import fs from "fs";
+import { oauth2Client } from "../routes/googleCallbackRouter.js";
+import { response } from "express";
 
+//Theek karna hai ise
 export const accessWorkspace = asyncHandler(async (req, res) => {
   const { userId } = req.body;
 
@@ -14,32 +20,7 @@ export const accessWorkspace = asyncHandler(async (req, res) => {
     $and: [{ users: { $elemMatch: { $eq: req.user._id } } }],
   }).populate("users", "-password");
 
-  isChat = await User.populate(isChat, {
-    path: "latestMessage.sender",
-    select: "name pic email",
-  });
-
-  if (isChat.length > 0) {
-    return res.send(isChat[0]);
-  } else {
-    let chatData = {
-      workspaceName: "sender",
-      users: [req.user._id, userId],
-    };
-
-    try {
-      const createdChat = await Chat.create(chatData);
-      const FullChat = await Chat.findOne({ _id: createdChat._id }).populate(
-        "users",
-        "-password"
-      );
-
-      return res.status(200).json(FullChat);
-    } catch (error) {
-      res.status(400);
-      throw new Error(error.message);
-    }
-  }
+  //kuch karna hai idhar
 });
 
 export const fetchAllWorkspaces = asyncHandler(async (req, res) => {
@@ -66,16 +47,8 @@ export const createWorkspace = asyncHandler(async (req, res) => {
     });
   }
 
-  //from frontend we have an array of users and those will be sent at backend
-  //using stringyfy() because we cannot directly send an array. Now to parse that string we use JSON.parse()
   let users = JSON.parse(req.body.users);
 
-  //If number of users is less than 2, we will not allow to form a group
-  // if (users.length < 2) {
-  //   return res.status(400).send("More than 2 users required to form a group");
-  // }
-
-  //Add the currently login user to group or groupAdmin(you can say)
   users.push(req.user);
 
   try {
@@ -89,7 +62,7 @@ export const createWorkspace = asyncHandler(async (req, res) => {
     //Now we fetch this chat and send it to the user
     const fullWorkspace = await Workspace.findOne({ _id: workspace._id })
       .populate("users", "-password")
-      .populate("groupAdmin", "-password");
+      .populate("workspaceAdmin", "-password");
 
     return res.status(200).json(fullWorkspace);
   } catch (error) {
@@ -100,31 +73,31 @@ export const createWorkspace = asyncHandler(async (req, res) => {
 export const renameWorkspace = asyncHandler(async (req, res) => {
   const { workspaceId, workspaceName } = req.body;
 
-  const updatedChat = await Chat.findByIdAndUpdate(
-    chatId,
+  const updatedWorkspace = await Workspace.findByIdAndUpdate(
+    workspaceId,
     {
-      chatName: chatName,
+      workspaceName: workspaceName,
     },
     {
       new: true, // it will return updated value
     }
   )
     .populate("users", "-password")
-    .populate("groupAdmin", "-password");
+    .populate("workspaceAdmin", "-password");
 
   //Check if any errors
-  if (!updatedChat) {
+  if (!updatedWorkspace) {
     res.status(404);
-    throw new Error("Chat not found");
+    throw new Error("Workspace not found");
   } else {
-    res.status(200).json(updatedChat);
+    res.status(200).json(updatedWorkspace);
   }
 });
 
 export const addToWorkspace = asyncHandler(async (req, res) => {
   const { workspaceId, userToBeAddedId } = req.body;
 
-  const added = await Chat.findByIdAndUpdate(
+  const added = await Workspace.findByIdAndUpdate(
     workspaceId,
     {
       $push: { users: userToBeAddedId }, //Add a new user
@@ -150,7 +123,7 @@ export const removeFromWorkspace = asyncHandler(async (req, res) => {
   const removed = await Workspace.findByIdAndUpdate(
     workspaceId,
     {
-      $pull: { users: userToBeRemovedId }, //Add a new user
+      $pull: { users: userToBeRemovedId },
     },
     {
       new: true,
@@ -161,8 +134,101 @@ export const removeFromWorkspace = asyncHandler(async (req, res) => {
 
   if (!removed) {
     return res.status(404);
-    throw new Error("Workspace not found");
   } else {
     return res.status(200).json(removed);
   }
+});
+
+// Upload Video by anyone(workspace users)
+export const uploadVideoToYUM = asyncHandler(async (req, res) => {
+  const workspace = await Workspace.findById(req.params.id);
+  const { title, description } = req.body;
+
+  const file = req.file;
+  const fileUri = getDataUri(file);
+
+  //Cloudinary
+  const cloudinaryUploadOptions = {
+    folder: "ProjectS",
+    resource_type: "video",
+  };
+
+  const mycloud = await cloudinary.v2.uploader.upload(
+    fileUri.content,
+    cloudinaryUploadOptions
+  );
+
+  //Database
+  const video = {
+    title,
+    description,
+    video: { public_id: mycloud.public_id, url: mycloud.secure_url },
+    status: false,
+  };
+  workspace.videos.push(video);
+
+  await workspace.save();
+
+  return res.status(200).json({
+    video,
+  });
+});
+
+//Fetch all  videos from a workspace
+export const allvideos = asyncHandler(async (req, res) => {
+  const workspace = await Workspace.findById(req.params.id);
+  return res.status(200).json({
+    videos: workspace.videos,
+  });
+});
+
+//Upload video to youtube
+export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
+  const { selectedWorkspaceId, videoId } = req.body;
+  const workspace = await Workspace.findById(selectedWorkspaceId);
+  let video = null;
+  video = workspace.videos.filter(
+    (curVideo) => curVideo._id.toString() === videoId.toString()
+  );
+
+  // Create a YouTube service object
+  const youtube = google.youtube("v3");
+  const videoPath =
+    "https://res.cloudinary.com/dk2fcl7bi/video/upload/v1692614568/ProjectS/jsry3bcb37usn3hksrfk.mp4";
+
+  // Create a request to upload the video
+  try {
+    youtube.videos.insert({
+      auth: oauth2Client,
+      part: "snippet,contentDetails,status",
+      resource: {
+        // Set the video title and description
+        snippet: {
+          title: video.title,
+          description: video.description,
+        },
+        // Set the video privacy status
+        status: {
+          privacyStatus: "private",
+        },
+      },
+      // Create the readable stream to upload the video
+      media: {
+        body: fs.createReadStream("./assets/videos/demovideo1.mp4"),
+      },
+    });
+
+    res.status(200).json({
+      message: `Video uploaded to Youtube!`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      Error: `Some error occurred while uploading video vido`,
+      errorMessage: error,
+    });
+  }
+  res.status(200).json({
+    success: true,
+    message: `Video uploaded successfully`,
+  });
 });
