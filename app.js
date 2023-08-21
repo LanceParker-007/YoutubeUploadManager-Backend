@@ -5,6 +5,7 @@ import workspaceRoutes from "./routes/workspaceRoutes.js";
 import googleCallbackRouter from "./routes/googleCallbackRouter.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 config({
   path: "./config/config.env",
@@ -12,7 +13,7 @@ config({
 
 const app = express();
 
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
 app.use(express({ urlencoded: true }));
 app.use(cookieParser());
