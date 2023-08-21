@@ -193,6 +193,7 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
 
   // Create a YouTube service object
   const youtube = google.youtube("v3");
+  //AWS ya kisi store se path dena padega
   const videoPath =
     "https://res.cloudinary.com/dk2fcl7bi/video/upload/v1692614568/ProjectS/jsry3bcb37usn3hksrfk.mp4";
 
