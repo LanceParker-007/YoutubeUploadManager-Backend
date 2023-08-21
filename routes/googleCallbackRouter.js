@@ -7,7 +7,7 @@ const router = express.Router();
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  process.env.REDIRECT_URI
+  process.env.PROD_REDIRECT_URI
 );
 // ----------------------------------------------------------------
 
@@ -22,7 +22,7 @@ router.get("/google/callback", async (req, res) => {
     code: authorizationCode,
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
-    redirect_uri: process.env.REDIRECT_URI,
+    redirect_uri: process.env.PROD_REDIRECT_URI,
     grant_type: "authorization_code",
   };
 
@@ -39,7 +39,8 @@ router.get("/google/callback", async (req, res) => {
       access_token: ACCESS_TOKEN,
     });
 
-    res.redirect("http://localhost:3000");
+    // res.redirect(process.env.DEV_FRONTEND_URL);
+    res.redirect(process.env.PROD_FRONTEND_URL);
   } catch (error) {
     console.error("Error exchanging authorization code:", error);
     // Handle errors and send an appropriate response to the frontend
