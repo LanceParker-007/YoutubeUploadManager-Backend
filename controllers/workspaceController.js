@@ -198,39 +198,41 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
   //   "https://res.cloudinary.com/dk2fcl7bi/video/upload/v1692614568/ProjectS/jsry3bcb37usn3hksrfk.mp4";
 
   // Create a request to upload the video
-  // try {
-  //   youtube.videos.insert({
-  //     auth: oauth2Client,
-  //     part: "snippet,contentDetails,status",
-  //     resource: {
-  //       // Set the video title and description
-  //       snippet: {
-  //         title: "Testomg Title",
-  //         description: "Testing description",
-  //       },
-  //       // Set the video privacy status
-  //       status: {
-  //         privacyStatus: "private",
-  //       },
-  //     },
-  //     // Create the readable stream to upload the video
-  //     media: {
-  //       body: fs.createReadStream("./assets/videos/demovideo1.mp4"),
-  //     },
-  //   });
+  try {
+    youtube.videos.insert({
+      auth: oauth2Client,
+      part: "snippet,contentDetails,status",
+      resource: {
+        // Set the video title and description
+        snippet: {
+          title: "Testomg Title",
+          description: "Testing description",
+        },
+        // Set the video privacy status
+        status: {
+          privacyStatus: "private",
+        },
+      },
+      // Create the readable stream to upload the video
+      media: {
+        body: fs.createReadStream("./assets/videos/demovideo1.mp4"),
+      },
+    });
 
-  //   res.status(200).json({
-  //     message: `Video uploaded to Youtube!`,
-  //   });
-  // } catch (error) {
-  //   res.status(500).json({
-  //     Error: `Some error occurred while uploading video `,
-  //     errorMessage: error,
-  //   });
-  // }
+    res.status(200).json({
+      success: true,
+      message: `Video uploaded to Youtube!`,
+    });
+  } catch (error) {
+    console.log("ERRORRR: ", error);
+    res.status(500).json({
+      message: `Error occurred while uploading video to Youtube!`,
+    });
+  }
 
-  res.status(200).json({
-    success: true,
-    message: `Video uploaded successfully`,
-  });
+  //Testing
+  // res.status(200).json({
+  //   success: true,
+  //   message: `Testing Video uploaded successfully`,
+  // });
 });
