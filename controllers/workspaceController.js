@@ -183,56 +183,98 @@ export const allvideos = asyncHandler(async (req, res) => {
 });
 
 //Upload video to youtube
+// export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
+//   // const { selectedWorkspaceId, videoId } = req.body;
+//   // const workspace = await Workspace.findById(selectedWorkspaceId);
+//   // let video = null;
+//   // video = workspace.videos.filter(
+//   //   (curVideo) => curVideo._id.toString() === videoId.toString()
+//   // );
+
+//   // Create a YouTube service object
+//   const youtube = google.youtube("v3");
+//   //AWS ya kisi store se path dena padega
+//   // const videoPath =
+//   //   "https://res.cloudinary.com/dk2fcl7bi/video/upload/v1692614568/ProjectS/jsry3bcb37usn3hksrfk.mp4";
+
+//   // Create a request to upload the video
+//   try {
+//     youtube.videos.insert({
+//       auth: oauth2Client,
+//       part: "snippet,contentDetails,status",
+//       resource: {
+//         // Set the video title and description
+//         snippet: {
+//           title: "Testomg Title",
+//           description: "Testing description",
+//         },
+//         // Set the video privacy status
+//         status: {
+//           privacyStatus: "private",
+//         },
+//       },
+//       // Create the readable stream to upload the video
+//       media: {
+//         body: fs.createReadStream("./assets/videos/demovideo1.mp4"),
+//       },
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: `Video uploaded to Youtube!`,
+//     });
+//   } catch (error) {
+//     console.log("ERRORRR: ", error);
+//     res.status(500).json({
+//       message: `Error occurred while uploading video to Youtube!`,
+//     });
+//   }
+
+//   //Testing
+//   // res.status(200).json({
+//   //   success: true,
+//   //   message: `Testing Video uploaded successfully`,
+//   // });
+// });
+
+//Direct Video to Youtube from Cloudianry
 export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
-  // const { selectedWorkspaceId, videoId } = req.body;
-  // const workspace = await Workspace.findById(selectedWorkspaceId);
-  // let video = null;
-  // video = workspace.videos.filter(
-  //   (curVideo) => curVideo._id.toString() === videoId.toString()
-  // );
+  // Cloudinary video URL
+  const cloudinaryVideoUrl =
+    "https://res.cloudinary.com/dk2fcl7bi/video/upload/v1692626244/ProjectS/a94apmrjatolzjziqh08.mp4";
 
-  // Create a YouTube service object
+  // Create an axios instance to stream the video from Cloudinary
+  const axiosInstance = axios.create({
+    baseURL: cloudinaryVideoUrl,
+    responseType: "stream",
+  });
+
+  // Upload the video to YouTube
   const youtube = google.youtube("v3");
-  //AWS ya kisi store se path dena padega
-  // const videoPath =
-  //   "https://res.cloudinary.com/dk2fcl7bi/video/upload/v1692614568/ProjectS/jsry3bcb37usn3hksrfk.mp4";
 
-  // Create a request to upload the video
-  try {
-    youtube.videos.insert({
+  youtube.videos.insert(
+    {
       auth: oauth2Client,
       part: "snippet,contentDetails,status",
       resource: {
-        // Set the video title and description
         snippet: {
           title: "Testomg Title",
           description: "Testing description",
         },
-        // Set the video privacy status
         status: {
           privacyStatus: "private",
         },
       },
-      // Create the readable stream to upload the video
       media: {
-        body: fs.createReadStream("./assets/videos/demovideo1.mp4"),
+        body: axiosInstance.get("").data, // Stream the video from Cloudinary
       },
-    });
-
-    res.status(200).json({
-      success: true,
-      message: `Video uploaded to Youtube!`,
-    });
-  } catch (error) {
-    console.log("ERRORRR: ", error);
-    res.status(500).json({
-      message: `Error occurred while uploading video to Youtube!`,
-    });
-  }
-
-  //Testing
-  // res.status(200).json({
-  //   success: true,
-  //   message: `Testing Video uploaded successfully`,
-  // });
+    },
+    (err, response) => {
+      if (err) {
+        console.error("Error uploading video to YouTube:", err);
+      } else {
+        console.log("Video uploaded to YouTube successfully:", response.data);
+      }
+    }
+  );
 });
