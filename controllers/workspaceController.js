@@ -252,29 +252,35 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
   // Upload the video to YouTube
   const youtube = google.youtube("v3");
 
-  youtube.videos.insert(
-    {
+  try {
+    youtube.videos.insert({
       auth: oauth2Client,
       part: "snippet,contentDetails,status",
       resource: {
+        // Set the video title and description
         snippet: {
           title: "Testomg Title",
           description: "Testing description",
         },
+        // Set the video privacy status
         status: {
           privacyStatus: "private",
         },
       },
+      // Create the readable stream to upload the video
       media: {
-        body: axiosInstance.get("").data, // Stream the video from Cloudinary
+        body: axiosInstance.get("").data,
       },
-    },
-    (err, response) => {
-      if (err) {
-        console.error("Error uploading video to YouTube:", err);
-      } else {
-        console.log("Video uploaded to YouTube successfully:", response.data);
-      }
-    }
-  );
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Video uploaded to Youtube!`,
+    });
+  } catch (error) {
+    console.log("ERRORRR: ", error);
+    res.status(500).json({
+      message: `Error occurred while uploading video to Youtube!`,
+    });
+  }
 });
