@@ -34,7 +34,6 @@ router.get("/google/callback", async (req, res) => {
 
     // Extract the access token from the response and set to outh2Client credentials
     const ACCESS_TOKEN = response.data.access_token;
-    // console.log("Access Token from googleCallbackRouter:", ACCESS_TOKEN);
     oauth2Client.setCredentials({
       access_token: ACCESS_TOKEN,
     });
