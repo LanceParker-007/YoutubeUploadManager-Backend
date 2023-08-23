@@ -12,9 +12,6 @@ import {
   uploadVideoToYoutube,
 } from "../controllers/workspaceController.js";
 import singleUpload from "../middleware/multer.js";
-//
-// import multer from "multer";
-// const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
@@ -43,9 +40,6 @@ router.route("/upload/:id").post(protect, singleUpload, uploadVideoToYUM);
 router.route("/allvideos/:id").get(protect, allvideos);
 
 //Upload Video to youtube API, protect lagana hai
-// router
-//   .route("/uploadvideotoyoutube")
-//   .post(upload.single("video"), uploadVideoToYoutube);
-router.route("/uploadvideotoyoutube").post(uploadVideoToYoutube);
+router.route("/uploadvideotoyoutube").post(protect, uploadVideoToYoutube);
 
 export default router;
