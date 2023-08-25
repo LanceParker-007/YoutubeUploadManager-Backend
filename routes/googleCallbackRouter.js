@@ -18,8 +18,8 @@ const oauth2Client = new google.auth.OAuth2(
 const accessTokenCookieOptions = {
   maxAge: 3600000, // 1hr
   secure: true,
-  HttpOnly: true,
-  SameSite: "Lax",
+  // HttpOnly: true,
+  // SameSite: "Lax",
 };
 
 const refreshTokenCookieOptions = {
@@ -159,8 +159,8 @@ router.get("/signin/google/callback", async (req, res) => {
     res.cookie("userLoginDetail", userDetail, {
       maxAge: 86400000, // 24d
       secure: true,
-      HttpOnly: true,
-      SameSite: "Lax",
+      // HttpOnly: true,
+      // SameSite: "Lax",
     });
     //
 
