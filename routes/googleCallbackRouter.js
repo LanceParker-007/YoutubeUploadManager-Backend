@@ -17,11 +17,9 @@ const oauth2Client = new google.auth.OAuth2(
 // ----------------------------------------------------------------
 const accessTokenCookieOptions = {
   maxAge: 3600000, // 1hr
-  domain: "localhost",
-  path: "/",
-  secure: false, //true hone se website pe cookie ayegi postman pe nahi
-  sameSite: "lax",
-  domain: "localhost",
+  secure: true,
+  HttpOnly: true,
+  SameSite: "Lax",
 };
 
 const refreshTokenCookieOptions = {
@@ -159,9 +157,10 @@ router.get("/signin/google/callback", async (req, res) => {
     };
 
     res.cookie("userLoginDetail", userDetail, {
-      maxAge: 86400000, // 1hr
-      secure: true, //true hone se website pe cookie ayegi postman pe nahi
-      sameSite: "lax",
+      maxAge: 86400000, // 24d
+      secure: true,
+      HttpOnly: true,
+      SameSite: "Lax",
     });
     //
 
