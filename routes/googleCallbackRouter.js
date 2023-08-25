@@ -20,7 +20,7 @@ const accessTokenCookieOptions = {
   maxAge: 3600000, // 1hr
   secure: true,
   HttpOnly: true,
-  SameSite: "Lax",
+  sameSite: "none",
 };
 
 const refreshTokenCookieOptions = {
@@ -108,76 +108,69 @@ router.get("/google/callback", async (req, res) => {
   }
 });
 
-router.get(
-  "/signin/google/callback",
-  cors({
-    origin: "*",
-    credentials: true,
-  }),
-  async (req, res) => {
-    const authorizationCode = req.query.code;
+router.get("/signin/google/callback", async (req, res) => {
+  const authorizationCode = req.query.code;
 
-    // Make sure the token endpoint URL is correct
-    const tokenEndpoint = "https://oauth2.googleapis.com/token";
+  // Make sure the token endpoint URL is correct
+  const tokenEndpoint = "https://oauth2.googleapis.com/token";
 
-    const tokenData = {
-      code: authorizationCode,
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      redirect_uri: process.env.PROD_SIGNIN_REDIRECT_URI,
-      grant_type: "authorization_code",
+  const tokenData = {
+    code: authorizationCode,
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    redirect_uri: process.env.PROD_SIGNIN_REDIRECT_URI,
+    grant_type: "authorization_code",
+  };
+
+  try {
+    // Make the token exchange request
+    const response = await axios.post(tokenEndpoint, null, {
+      params: tokenData,
+    });
+
+    const googleUser = jwt.decode(response.data.id_token);
+    // console.log(googleUser.name);
+    if (!googleUser.email_verified) {
+      res.status(400).json({
+        success: false,
+        message: "Google has not verified your account",
+      });
+    }
+
+    let user = await User.findOne({ email: googleUser.email });
+
+    if (!user) {
+      user = await User.create({
+        name: googleUser.name,
+        email: googleUser.email,
+        pic: googleUser.picture,
+      });
+
+      if (user) user.save();
+    }
+
+    const userDetail = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      pic: user.pic,
+      token: generateToken(user._id),
     };
 
-    try {
-      // Make the token exchange request
-      const response = await axios.post(tokenEndpoint, null, {
-        params: tokenData,
-      });
+    res.cookie("userLoginDetail", userDetail, {
+      maxAge: 86400000, // 24d
+      secure: true,
+      HttpOnly: true,
+      sameSite: "none",
+    });
+    //
 
-      const googleUser = jwt.decode(response.data.id_token);
-      // console.log(googleUser.name);
-      if (!googleUser.email_verified) {
-        res.status(400).json({
-          success: false,
-          message: "Google has not verified your account",
-        });
-      }
-
-      let user = await User.findOne({ email: googleUser.email });
-
-      if (!user) {
-        user = await User.create({
-          name: googleUser.name,
-          email: googleUser.email,
-          pic: googleUser.picture,
-        });
-
-        if (user) user.save();
-      }
-
-      const userDetail = {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        pic: user.pic,
-        token: generateToken(user._id),
-      };
-
-      res.cookie("userLoginDetail", userDetail, {
-        maxAge: 86400000, // 24d
-        secure: true,
-        HttpOnly: true,
-        SameSite: "Lax",
-      });
-      //
-
-      res.redirect(process.env.PROD_FRONTEND_URL);
-    } catch (error) {
-      console.error("Error Login in User", error);
-      res.status(500).send("Failed to Login user");
-    }
+    res.redirect(process.env.PROD_FRONTEND_URL);
+  } catch (error) {
+    console.error("Error Login in User", error);
+    res.status(500).send("Failed to Login user");
   }
-);
+});
 
 export default router;
 export { oauth2Client };
