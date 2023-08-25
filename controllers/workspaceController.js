@@ -240,6 +240,7 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
     });
 
     videoFound[0].status = true;
+    await workspace.save();
     res.status(200).json({
       success: true,
       message: `Video uploaded to Youtube!`,
