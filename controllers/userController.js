@@ -108,11 +108,16 @@ export const signinWithGoogle = asyncHandler(async (req, res) => {
   const { name, email, pic } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email: email });
 
     if (!user) {
-      res.status(400);
-      throw new Error("User not found!");
+      user = await User.create({
+        name,
+        email,
+        pic,
+      });
+
+      if (user) user.save();
     }
 
     return res.status(201).json({

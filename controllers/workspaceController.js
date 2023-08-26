@@ -117,6 +117,7 @@ export const addToWorkspace = asyncHandler(async (req, res) => {
   }
 });
 
+//Theek karna hai
 export const removeFromWorkspace = asyncHandler(async (req, res) => {
   const { workspaceId, userToBeRemovedId } = req.body;
 
@@ -185,7 +186,7 @@ export const allvideos = asyncHandler(async (req, res) => {
 //Upload video to youtube
 export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
   //Find if video exists
-  const { selectedWorkspaceId, videoId } = req.body;
+  const { selectedWorkspaceId, videoId, accessToken } = req.body;
 
   const workspace = await Workspace.findById(selectedWorkspaceId);
   let videoFound = null;
@@ -217,6 +218,16 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
   const videoStream = new Readable();
   videoStream.push(videoBuffer);
   videoStream.push(null);
+
+  //Working Youtube Code, isko udhar ytApi mein set karna hai
+  if (accessToken) {
+    oauth2Client.setCredentials({
+      access_token: accessToken,
+    });
+  } else {
+    res.status(400);
+    throw new Error("Yt Access Token Expired. Login again");
+  }
 
   try {
     youtube.videos.insert({

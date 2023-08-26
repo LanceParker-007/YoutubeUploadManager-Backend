@@ -2,11 +2,9 @@ import axios from "axios";
 import express from "express";
 import jwt from "jsonwebtoken";
 import { google } from "googleapis";
-import generateToken from "../utils/generateToken.js";
-import { User } from "../models/User.js";
-import cors from "cors";
 
 const router = express.Router();
+
 // ----------------------------------------------------------------
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -15,19 +13,8 @@ const oauth2Client = new google.auth.OAuth2(
 );
 // ----------------------------------------------------------------
 
-// ----------------------------------------------------------------
-const accessTokenCookieOptions = {
-  maxAge: 3600000, // 1hr
-  secure: true,
-  HttpOnly: true,
-  sameSite: "none",
-};
-
-const refreshTokenCookieOptions = {
-  ...accessTokenCookieOptions,
-  maxAge: 3.154e10, // 1 year
-};
-// ----------------------------------------------------------------
+let ytAccessToken = null;
+let ytAccessTokenCreatedTime = null;
 
 // Define your Google OAuth callback route
 router.get("/google/callback", async (req, res) => {
@@ -50,12 +37,9 @@ router.get("/google/callback", async (req, res) => {
       params: tokenData,
     });
 
-    // Getting user details
-    // const id_token = response.data.id_token;
     const access_token = response.data.access_token;
     const googleUser = jwt.decode(response.data.id_token);
-    // const googleUser = await getGoogleUser({ id_token, access_token });
-    // console.log(googleUser.name);
+
     if (!googleUser.email_verified) {
       res.status(400).json({
         success: false,
@@ -63,114 +47,108 @@ router.get("/google/callback", async (req, res) => {
       });
     }
 
-    const accessToken = jwt.sign(
-      {
-        name: googleUser.name,
-        email: googleUser.email,
-        picture: googleUser.picture,
-        access_token: access_token,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1hr",
-      }
-    );
-    const refreshToken = jwt.sign(
-      {
-        name: googleUser.name,
-        email: googleUser.email,
-        picture: googleUser.picture,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "365d",
-      }
-    );
+    ytAccessToken = access_token;
+    ytAccessTokenCreatedTime = new Date().getTime();
 
-    // console.log(access_token);
-    res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-
-    res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
-
-    //-------Create Session
-
-    //Working Youtube Code
-    oauth2Client.setCredentials({
-      access_token: access_token,
+    // Have to check if cookie is getting set to vercelBackend
+    res.cookie("ytAccessToken", access_token, {
+      domain: "https://yum-frontend.vercel.app",
+      maxAge: 3600000, // 1hr
+      secure: true,
+      sameSite: "none",
     });
-    res.redirect(process.env.PROD_FRONTEND_URL);
+
+    return res.redirect(process.env.PROD_FRONTEND_URL);
   } catch (error) {
     console.error("Error exchanging authorization code:", error);
     // Handle errors and send an appropriate response to the frontend
-    res
+    return res
       .status(500)
       .send("Failed to authenticate user. Error exchanging authorization code");
   }
 });
 
-router.get("/signin/google/callback", async (req, res) => {
-  const authorizationCode = req.query.code;
+router.get("/getytaccesstoken", (req, res) => {
+  const currentTime = new Date().getTime();
+  const elapsedTimeInSeconds = (currentTime - ytAccessTokenCreatedTime) / 1000;
 
-  // Make sure the token endpoint URL is correct
-  const tokenEndpoint = "https://oauth2.googleapis.com/token";
-
-  const tokenData = {
-    code: authorizationCode,
-    client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET,
-    redirect_uri: process.env.PROD_SIGNIN_REDIRECT_URI,
-    grant_type: "authorization_code",
-  };
-
-  try {
-    // Make the token exchange request
-    const response = await axios.post(tokenEndpoint, null, {
-      params: tokenData,
+  if (elapsedTimeInSeconds > 3600) {
+    return res.status(200).json({
+      ytAccessToken: null,
+      currentTime,
     });
-
-    const googleUser = jwt.decode(response.data.id_token);
-    // console.log(googleUser.name);
-    if (!googleUser.email_verified) {
-      res.status(400).json({
-        success: false,
-        message: "Google has not verified your account",
-      });
-    }
-
-    let user = await User.findOne({ email: googleUser.email });
-
-    if (!user) {
-      user = await User.create({
-        name: googleUser.name,
-        email: googleUser.email,
-        pic: googleUser.picture,
-      });
-
-      if (user) user.save();
-    }
-
-    const userDetail = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      pic: user.pic,
-      token: generateToken(user._id),
-    };
-
-    res.cookie("userLoginDetail", userDetail, {
-      maxAge: 86400000, // 24d
-      secure: true,
-      HttpOnly: true,
-      sameSite: "none",
-    });
-    //
-
-    res.redirect(process.env.PROD_FRONTEND_URL);
-  } catch (error) {
-    console.error("Error Login in User", error);
-    res.status(500).send("Failed to Login user");
   }
+
+  return res.status(200).json({
+    ytAccessToken: ytAccessToken,
+    currentTime,
+  });
 });
+
+// router.post("/signin/google/callback", async (req, res) => {
+//   const authorizationCode = req.query.code;
+
+//   // Make sure the token endpoint URL is correct
+//   const tokenEndpoint = "https://oauth2.googleapis.com/token";
+
+//   const tokenData = {
+//     code: authorizationCode,
+//     client_id: process.env.CLIENT_ID,
+//     client_secret: process.env.CLIENT_SECRET,
+//     redirect_uri: process.env.PROD_SIGNIN_REDIRECT_URI,
+//     grant_type: "authorization_code",
+//   };
+
+//   console.log("It ran");
+//   // try {
+//   //   // Make the token exchange request
+//   const response = await axios.post(tokenEndpoint, null, {
+//     params: tokenData,
+//   });
+
+//   const googleUser = jwt.decode(response.data.id_token);
+//   console.log(googleUser.name);
+//   //   if (!googleUser.email_verified) {
+//   //     res.status(400).json({
+//   //       success: false,
+//   //       message: "Google has not verified your account",
+//   //     });
+//   //   }
+
+//   //   let user = await User.findOne({ email: googleUser.email });
+
+//   //   if (!user) {
+//   //     user = await User.create({
+//   //       name: googleUser.name,
+//   //       email: googleUser.email,
+//   //       pic: googleUser.picture,
+//   //     });
+
+//   //     if (user) user.save();
+//   //   }
+
+//   //   const userDetail = {
+//   //     _id: user._id,
+//   //     name: user.name,
+//   //     email: user.email,
+//   //     pic: user.pic,
+//   //     token: generateToken(user._id),
+//   //   };
+
+//   //   res.cookie("userLoginDetail", userDetail, {
+//   //     maxAge: 86400000, // 24d
+//   //     secure: true,
+//   //     HttpOnly: true,
+//   //     sameSite: "none",
+//   //   });
+//   //   //
+
+//   res.redirect(process.env.PROD_FRONTEND_URL);
+//   // } catch (error) {
+//   //   console.error("Error Login in User", error);
+//   //   res.status(500).send("Failed to Login user");
+//   // }
+// });
 
 export default router;
 export { oauth2Client };
