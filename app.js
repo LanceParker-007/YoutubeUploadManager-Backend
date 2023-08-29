@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import userRoutes from "./routes/userRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import googleCallbackRouter from "./routes/googleCallbackRouter.js";
+import userServerRouter from "./routes/userServerRouter.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -38,6 +39,9 @@ app.use("/api/workspace", workspaceRoutes);
 
 //Google Callback Router
 app.use("/", googleCallbackRouter);
+
+//userServer Router
+app.use("/api/userserver", userServerRouter);
 
 // Other Routes
 app.use(notFound);

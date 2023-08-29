@@ -9,7 +9,7 @@ const router = express.Router();
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  process.env.PROD_REDIRECT_URI
+  process.env.PROD_REDIRECT_URI // Change According to user
 );
 // ----------------------------------------------------------------
 
@@ -27,7 +27,7 @@ router.get("/google/callback", async (req, res) => {
     code: authorizationCode,
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
-    redirect_uri: process.env.PROD_REDIRECT_URI,
+    redirect_uri: process.env.PROD_REDIRECT_URI, //userserverRedirectURI
     grant_type: "authorization_code",
   };
 
