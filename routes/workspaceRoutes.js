@@ -9,7 +9,6 @@ import {
   removeFromWorkspace,
   uploadVideoToYUM,
   allvideos,
-  uploadVideoToYoutube,
 } from "../controllers/workspaceController.js";
 import singleUpload from "../middleware/multer.js";
 
@@ -40,6 +39,6 @@ router.route("/upload/:id").post(protect, singleUpload, uploadVideoToYUM);
 router.route("/allvideos/:id").get(protect, allvideos);
 
 //Upload Video to youtube API, protect lagana hai
-router.route("/uploadvideotoyoutube").post(protect, uploadVideoToYoutube);
+// router.route("/uploadvideotoyoutube").post(protect, uploadVideoToYoutube);
 
 export default router;
