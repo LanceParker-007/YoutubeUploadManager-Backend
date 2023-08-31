@@ -1,12 +1,55 @@
 import asyncHandler from "express-async-handler";
-import subscriptions from "../tempData/subscriptions.js";
+
+//Model will be created till then temporary
+const subscriptions = [
+  {
+    serverip: "127.0.0.1",
+    subscriptionCreated: "2023",
+    serverAdmin: "User 1",
+    status: "active",
+  },
+  {
+    serverip: "127.0.0.2",
+    subscriptionCreated: "2022",
+    serverAdmin: "User 2",
+    status: "active",
+  },
+  {
+    serverip: "127.0.0.3",
+    subscriptionCreated: "2021",
+    serverAdmin: "User 3",
+    status: "inactive",
+  },
+  {
+    serverip: "127.0.0.4",
+    subscriptionCreated: "2024",
+    serverAdmin: "User 4",
+    status: "active",
+  },
+  {
+    serverip: "https://test-yum-backend.vercel.app",
+    subscriptionCreated: "2024",
+    serverAdmin: "User 5",
+    status: "active",
+  },
+  {
+    serverip: "http://localhost:5000",
+    subscriptionCreated: "2024",
+    serverAdmin: "User 6",
+    status: "active",
+  },
+  {
+    serverip: "https://yum-backend.vercel.app",
+    subscriptionCreated: "2024",
+    serverAdmin: "User 5",
+    status: "active",
+  },
+];
 
 export const createServerSubscription = () => {};
 
 export const checkServerSubscription = asyncHandler(async (req, res) => {
   const { inputServer: userServer } = req.body;
-
-  console.log("userServer", userServer);
   try {
     const subscription = subscriptions.find(
       (subscription) =>

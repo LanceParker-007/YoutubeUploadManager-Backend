@@ -95,7 +95,7 @@ export const signupWithGoogle = asyncHandler(async (req, res) => {
       email,
       pic,
     });
-    console.log(user);
+    // console.log(user);
     return res.redirect(process.env.DEV_FRONTEND_URL);
   } catch (error) {
     res.status(400);
