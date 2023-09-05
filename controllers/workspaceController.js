@@ -143,36 +143,19 @@ export const removeFromWorkspace = asyncHandler(async (req, res) => {
 // Upload Video by anyone(workspace users)
 export const uploadVideoToYUM = asyncHandler(async (req, res) => {
   const workspace = await Workspace.findById(req.params.id);
-  const { title, description } = req.body;
+  const video = req.body;
 
-  const file = req.file;
-  const fileUri = getDataUri(file);
-
-  //Cloudinary
-  const cloudinaryUploadOptions = {
-    folder: "ProjectS",
-    resource_type: "video",
-  };
-
-  const mycloud = await cloudinary.v2.uploader.upload(
-    fileUri.content,
-    cloudinaryUploadOptions
-  );
-
-  //Database
-  const video = {
-    title,
-    description,
-    video: { public_id: mycloud.public_id, url: mycloud.secure_url },
-    status: false,
-  };
-  workspace.videos.push(video);
-
-  await workspace.save();
-
-  return res.status(200).json({
-    video,
-  });
+  try {
+    workspace.videos.push(video);
+    await workspace.save();
+    console.log(video);
+    return res.status(200).json({
+      video,
+    });
+  } catch (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
 });
 
 //Fetch all  videos from a workspace
@@ -183,24 +166,133 @@ export const allvideos = asyncHandler(async (req, res) => {
   });
 });
 
+//Get Video Info
+export const getVideoInfo = asyncHandler(async (req, res) => {
+  const { workspaceId, videoId } = req.params;
+
+  const workspace = await Workspace.findById(workspaceId);
+  let videoFound = null;
+  videoFound = workspace.videos.filter(
+    (curVideo) => curVideo._id.toString() === videoId.toString()
+  );
+
+  if (videoFound === null || videoFound.length === 0) {
+    console.log("Video not found");
+    return res.status(404).json({
+      success: false,
+      message: "Sorry, video not found!",
+    });
+  }
+
+  try {
+    // console.log(videoFound[0]);
+    return res.status(200).json({
+      success: true,
+      videoInfo: videoFound[0],
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: true,
+      message: "Some error occurred ",
+    });
+  }
+});
+
+//Edit Video Info
+export const editVideoInfo = asyncHandler(async (req, res) => {
+  const { workspaceId, videoId } = req.params;
+  const { title, description, category, tags } = req.body;
+
+  const workspace = await Workspace.findById(workspaceId);
+  let videoFound = null;
+  videoFound = workspace.videos.filter(
+    (curVideo) => curVideo._id.toString() === videoId.toString()
+  );
+
+  if (videoFound === null || videoFound.length === 0) {
+    console.log("Video not found");
+    return res.status(404).json({
+      success: false,
+      message: "Sorry, video not found!",
+    });
+  }
+
+  try {
+    videoFound[0].title = title;
+    videoFound[0].description = description;
+    videoFound[0].category = category;
+    videoFound[0].tags = tags;
+    await workspace.save();
+    return res.status(200).json({
+      success: true,
+      message: "Changes updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: true,
+      message: "Some error occurred ",
+    });
+  }
+});
+
+//Update Thumbnail
+export const updateThumbnail = asyncHandler(async (req, res) => {
+  const { workspaceId, videoId } = req.params;
+  const thumbnailInfo = req.body;
+
+  const workspace = await Workspace.findById(workspaceId);
+  let videoFound = null;
+  videoFound = workspace.videos.filter(
+    (curVideo) => curVideo._id.toString() === videoId.toString()
+  );
+
+  if (videoFound === null || videoFound.length === 0) {
+    console.log("Video not found");
+    return res.status(404).json({
+      success: false,
+      message: "Sorry, video not found!",
+    });
+  }
+
+  try {
+    videoFound[0].thumbnail = {
+      public_id: thumbnailInfo.public_id,
+      url: thumbnailInfo.url,
+    };
+    await workspace.save();
+    return res.status(200).json({
+      success: true,
+      message: "Thumbnail updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: true,
+      message: "Some error occurred ",
+    });
+  }
+});
+
 //Upload video to youtube
 // export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
 //   //Find if video exists
 //   const { selectedWorkspaceId, videoId, accessToken } = req.body;
 
-//   const workspace = await Workspace.findById(selectedWorkspaceId);
-//   let videoFound = null;
-//   videoFound = workspace.videos.filter(
-//     (curVideo) => curVideo._id.toString() === videoId.toString()
-//   );
+// const workspace = await Workspace.findById(selectedWorkspaceId);
+// let videoFound = null;
+// videoFound = workspace.videos.filter(
+//   (curVideo) => curVideo._id.toString() === videoId.toString()
+// );
 
-//   if (videoFound === null || videoFound.length === 0) {
-//     console.log("Video not found");
-//     return res.status(404).json({
-//       success: false,
-//       message: "Sorry, video not found!",
-//     });
-//   }
+// if (videoFound === null || videoFound.length === 0) {
+//   console.log("Video not found");
+//   return res.status(404).json({
+//     success: false,
+//     message: "Sorry, video not found!",
+//   });
+// }
 
 //   // console.log("here 1");
 //   // console.log(videoFound[0].video.url);

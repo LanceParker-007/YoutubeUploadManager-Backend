@@ -9,6 +9,9 @@ import {
   removeFromWorkspace,
   uploadVideoToYUM,
   allvideos,
+  editVideoInfo,
+  getVideoInfo,
+  updateThumbnail,
 } from "../controllers/workspaceController.js";
 import singleUpload from "../middleware/multer.js";
 
@@ -37,6 +40,17 @@ router.route("/upload/:id").post(protect, singleUpload, uploadVideoToYUM);
 
 //Fetch all videos of workspace
 router.route("/allvideos/:id").get(protect, allvideos);
+
+//Fetch video info
+router.route("/:workspaceId/:videoId").get(protect, getVideoInfo);
+
+//Update Video Info
+router.route("/:workspaceId/:videoId").put(protect, editVideoInfo);
+
+//Update Thumbnail
+router
+  .route("/updatethumbnail/:workspaceId/:videoId")
+  .put(protect, updateThumbnail);
 
 //Upload Video to youtube API, protect lagana hai
 // router.route("/uploadvideotoyoutube").post(protect, uploadVideoToYoutube);

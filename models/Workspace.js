@@ -18,13 +18,17 @@ const schema = new mongoose.Schema(
     },
     videos: [
       {
+        youtubeId: {
+          type: String,
+          required: false,
+        },
         title: {
           type: String,
           required: true,
         },
         description: {
           type: String,
-          required: true,
+          required: false,
         },
         video: {
           public_id: {
@@ -35,6 +39,24 @@ const schema = new mongoose.Schema(
             type: String,
             required: true,
           },
+        },
+        thumbnail: {
+          public_id: {
+            type: String,
+            required: false,
+          },
+          url: {
+            type: String,
+            required: false,
+          },
+        },
+        category: {
+          type: String, // You can specify this as a String or another type based on your category system.
+          required: false,
+        },
+        tags: {
+          type: String,
+          required: false,
         },
         status: {
           type: Boolean,
