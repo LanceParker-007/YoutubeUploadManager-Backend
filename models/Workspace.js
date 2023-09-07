@@ -54,10 +54,12 @@ const schema = new mongoose.Schema(
           type: String, // You can specify this as a String or another type based on your category system.
           required: false,
         },
-        tags: {
-          type: String,
-          required: false,
-        },
+        tags: [
+          {
+            type: String,
+            required: false,
+          },
+        ],
         status: {
           type: Boolean,
           default: false,

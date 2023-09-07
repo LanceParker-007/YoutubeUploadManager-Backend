@@ -48,7 +48,6 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
     throw new Error("Yt Access Token Expired. Login again");
   }
 
-  videoFound[0].tags = videoFound[0].tags.split(" ");
   try {
     const { data } = await youtube.videos.insert({
       auth: oauth2Client,
@@ -61,7 +60,7 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
             ? videoFound[0].description
             : "",
           tags: videoFound[0].tags ? videoFound[0].tags : [],
-          categoryId: 22,
+          categoryId: videoFound[0].category,
         },
         // Set the video privacy status
         status: {
@@ -82,7 +81,7 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
       message: `Video uploaded to Youtube!`,
     });
   } catch (error) {
-    // console.log("ERRORRR: ", error);
+    console.log("ERRORRR: ", error);
     res.status(500).json({
       message: `Error occurred while uploading video to Youtube!`,
     });
@@ -205,7 +204,6 @@ export const pushChangesToYoutube = asyncHandler(async (req, res) => {
       auth: oauth2Client,
     });
 
-    videoFound[0].tags = videoFound[0].tags.split(" ");
     const response = await youtube.videos.update({
       auth: oauth2Client,
       part: "snippet",
@@ -218,7 +216,7 @@ export const pushChangesToYoutube = asyncHandler(async (req, res) => {
             ? videoFound[0].description
             : "",
           tags: videoFound[0].tags ? videoFound[0].tags : [],
-          categoryId: 22,
+          categoryId: videoFound[0].category,
         },
       },
     });
