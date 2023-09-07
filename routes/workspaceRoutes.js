@@ -15,7 +15,7 @@ import {
   uploadVideoToPlatform,
 } from "../controllers/workspaceController.js";
 import singleUpload from "../middleware/multer.js";
-import { getUploadURL } from "../config/s3.js";
+import { getUploadURL } from "../aws/s3.js";
 
 const router = express.Router();
 
