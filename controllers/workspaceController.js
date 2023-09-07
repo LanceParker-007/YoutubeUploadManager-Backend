@@ -1,11 +1,5 @@
 import asyncHandler from "express-async-handler";
 import { Workspace } from "../models/Workspace.js";
-import getDataUri from "../utils/dataUri.js";
-import cloudinary from "cloudinary";
-import { google } from "googleapis";
-import { oauth2Client } from "../routes/googleCallbackRouter.js";
-import axios from "axios";
-import { Readable } from "stream";
 
 //Theek karna hai ise
 export const accessWorkspace = asyncHandler(async (req, res) => {
@@ -140,7 +134,7 @@ export const removeFromWorkspace = asyncHandler(async (req, res) => {
   }
 });
 
-// Upload Video by anyone(workspace users)
+// Upload Video by anyone(workspace users) //Deprecated
 export const uploadVideoToYUM = asyncHandler(async (req, res) => {
   const workspace = await Workspace.findById(req.params.id);
   const video = req.body;
@@ -148,7 +142,26 @@ export const uploadVideoToYUM = asyncHandler(async (req, res) => {
   try {
     workspace.videos.push(video);
     await workspace.save();
-    console.log(video);
+    // console.log(video);
+    return res.status(200).json({
+      video,
+    });
+  } catch (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
+});
+
+//Upload Video to YUM
+export const uploadVideoToPlatform = asyncHandler(async (req, res) => {
+  const workspace = await Workspace.findById(req.params.id);
+  const videoInfo = req.body;
+
+  const video = videoInfo;
+  try {
+    workspace.videos.push(video);
+    await workspace.save();
+    // console.log(video);
     return res.status(200).json({
       video,
     });
@@ -166,7 +179,7 @@ export const allvideos = asyncHandler(async (req, res) => {
   });
 });
 
-//Get Video Info
+//Get Video Info to prefill videoInfo on frontend
 export const getVideoInfo = asyncHandler(async (req, res) => {
   const { workspaceId, videoId } = req.params;
 
@@ -177,7 +190,7 @@ export const getVideoInfo = asyncHandler(async (req, res) => {
   );
 
   if (videoFound === null || videoFound.length === 0) {
-    console.log("Video not found");
+    // console.log("Video not found");
     return res.status(404).json({
       success: false,
       message: "Sorry, video not found!",
@@ -191,7 +204,7 @@ export const getVideoInfo = asyncHandler(async (req, res) => {
       videoInfo: videoFound[0],
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(400).json({
       success: true,
       message: "Some error occurred ",
@@ -211,7 +224,7 @@ export const editVideoInfo = asyncHandler(async (req, res) => {
   );
 
   if (videoFound === null || videoFound.length === 0) {
-    console.log("Video not found");
+    // console.log("Video not found");
     return res.status(404).json({
       success: false,
       message: "Sorry, video not found!",
@@ -274,84 +287,3 @@ export const updateThumbnail = asyncHandler(async (req, res) => {
     });
   }
 });
-
-//Upload video to youtube
-// export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
-//   //Find if video exists
-//   const { selectedWorkspaceId, videoId, accessToken } = req.body;
-
-// const workspace = await Workspace.findById(selectedWorkspaceId);
-// let videoFound = null;
-// videoFound = workspace.videos.filter(
-//   (curVideo) => curVideo._id.toString() === videoId.toString()
-// );
-
-// if (videoFound === null || videoFound.length === 0) {
-//   console.log("Video not found");
-//   return res.status(404).json({
-//     success: false,
-//     message: "Sorry, video not found!",
-//   });
-// }
-
-//   // console.log("here 1");
-//   // console.log(videoFound[0].video.url);
-//   // console.log("here 2");
-//   const cloudinaryVideoUrl = videoFound[0].video.url.toString();
-
-//   const youtube = google.youtube("v3");
-
-//   const response = await axios.get(cloudinaryVideoUrl, {
-//     responseType: "arraybuffer", // Important to get binary data
-//   });
-
-//   // Convert the downloaded data to a readable stream
-//   const videoBuffer = Buffer.from(response.data);
-//   const videoStream = new Readable();
-//   videoStream.push(videoBuffer);
-//   videoStream.push(null);
-
-//   //Working Youtube Code, isko udhar ytApi mein set karna hai
-//   if (accessToken) {
-//     oauth2Client.setCredentials({
-//       access_token: accessToken,
-//     });
-//   } else {
-//     res.status(400);
-//     throw new Error("Yt Access Token Expired. Login again");
-//   }
-
-//   try {
-//     youtube.videos.insert({
-//       auth: oauth2Client,
-//       part: "snippet,contentDetails,status",
-//       resource: {
-//         // Set the video title and description
-//         snippet: {
-//           title: videoFound[0].title,
-//           description: videoFound[0].description,
-//         },
-//         // Set the video privacy status
-//         status: {
-//           privacyStatus: "private",
-//         },
-//       },
-//       // Create the readable stream to upload the video
-//       media: {
-//         body: videoStream,
-//       },
-//     });
-
-//     videoFound[0].status = true;
-//     await workspace.save();
-//     res.status(200).json({
-//       success: true,
-//       message: `Video uploaded to Youtube!`,
-//     });
-//   } catch (error) {
-//     console.log("ERRORRR: ", error);
-//     res.status(500).json({
-//       message: `Error occurred while uploading video to Youtube!`,
-//     });
-//   }
-// });

@@ -12,8 +12,10 @@ import {
   editVideoInfo,
   getVideoInfo,
   updateThumbnail,
+  uploadVideoToPlatform,
 } from "../controllers/workspaceController.js";
 import singleUpload from "../middleware/multer.js";
+import { getUploadURL } from "../config/s3.js";
 
 const router = express.Router();
 
@@ -44,15 +46,20 @@ router.route("/allvideos/:id").get(protect, allvideos);
 //Fetch video info
 router.route("/:workspaceId/:videoId").get(protect, getVideoInfo);
 
-//Update Video Info
+//Update Video Info in DB, nake this route more meaningful
 router.route("/:workspaceId/:videoId").put(protect, editVideoInfo);
 
-//Update Thumbnail
+//Update Thumbnail in DB
 router
   .route("/updatethumbnail/:workspaceId/:videoId")
   .put(protect, updateThumbnail);
 
-//Upload Video to youtube API, protect lagana hai
-// router.route("/uploadvideotoyoutube").post(protect, uploadVideoToYoutube);
+//-----AWS------------
+// router.get("/s3url/videoname", generateUploadURL);
+
+// Upload Video to AWS and store video info YUM
+router.route("/uploadvideo/:id").post(uploadVideoToPlatform);
+
+router.post("/trial", getUploadURL);
 
 export default router;
