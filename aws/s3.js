@@ -1,18 +1,12 @@
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import asyncHandler from "express-async-handler";
+import { s3Client } from "../server.js";
 
 const bucketName = "bucket-yum-videos";
 
 //AWS pre-signed url to upload files
 export const generateUploadURL = asyncHandler(async (filename, contentType) => {
-  const s3Client = new S3Client({
-    region: "ap-south-1",
-    credentials: {
-      accessKeyId: process.env.AWS_IAM_USER_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_IAM_USER_SECRET_ACCESS_KEY,
-    },
-  });
   try {
     // console.log("here 1");
     // console.log(filename);
