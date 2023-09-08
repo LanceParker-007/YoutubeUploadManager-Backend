@@ -231,15 +231,20 @@ export const editVideoInfo = asyncHandler(async (req, res) => {
     });
   }
 
-  const tempTagsArray = tags.split(",");
-  const updatedTagsArray = [...tempTagsArray];
-  const uniqueUpdatedTagsArray = [...new Set(updatedTagsArray)];
+  let uniqueUpdatedTagsArray = null;
+  if (videoFound[0].tags.toString() !== tags) {
+    const tempTagsArray = tags.split(",");
+    const updatedTagsArray = [...tempTagsArray];
+    uniqueUpdatedTagsArray = [...new Set(updatedTagsArray)];
+  }
 
   try {
     videoFound[0].title = title;
     videoFound[0].description = description;
     videoFound[0].category = category;
-    videoFound[0].tags = uniqueUpdatedTagsArray;
+    videoFound[0].tags = uniqueUpdatedTagsArray
+      ? uniqueUpdatedTagsArray
+      : videoFound[0].tags;
     await workspace.save();
     return res.status(200).json({
       success: true,
