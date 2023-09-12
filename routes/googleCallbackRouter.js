@@ -46,11 +46,12 @@ router.get("/google/callback", async (req, res) => {
     const expirationTime = new Date();
     expirationTime.setHours(expirationTime.getHours() + 1);
 
+    Cookies.set();
     return res
       .cookie("yt_access_token", access_token, {
         httpOnly: false,
         secure: true, // Set to true in production
-        sameSite: "lax",
+        sameSite: "none",
         expires: expirationTime, // Use the calculated expiration time
       })
       .redirect(process.env.PROD_FRONTEND_URL);
