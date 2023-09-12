@@ -13,7 +13,7 @@ try {
   oauth2Client = new google.auth.OAuth2(
     process.env.CLIENT_ID,
     process.env.CLIENT_SECRET,
-    process.env.DEV_REDIRECT_URI // Change According to user
+    process.env.PROD_REDIRECT_URI // Change According to user
   );
 
   s3Client = new S3Client({

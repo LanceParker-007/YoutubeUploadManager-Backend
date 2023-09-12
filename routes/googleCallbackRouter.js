@@ -5,10 +5,6 @@ import Cookies from "js-cookie";
 
 const router = express.Router();
 
-// ----------------------------------------------------------------
-
-// ----------------------------------------------------------------
-
 let ytAccessToken = null;
 let ytAccessTokenCreatedTime = null;
 
@@ -23,7 +19,7 @@ router.get("/google/callback", async (req, res) => {
     code: authorizationCode,
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
-    redirect_uri: process.env.DEV_REDIRECT_URI, //userserverRedirectURI
+    redirect_uri: process.env.PROD_REDIRECT_URI, //userserverRedirectURI
     grant_type: "authorization_code",
   };
 
@@ -46,7 +42,7 @@ router.get("/google/callback", async (req, res) => {
     ytAccessToken = access_token;
     ytAccessTokenCreatedTime = new Date().getTime();
 
-    // return res.redirect(process.env.DEV_FRONTEND_URL);
+    // return res.redirect(process.env.PROD_FRONTEND_URL);
     const expirationTime = new Date();
     expirationTime.setHours(expirationTime.getHours() + 1);
 
@@ -57,7 +53,7 @@ router.get("/google/callback", async (req, res) => {
         sameSite: "lax",
         expires: expirationTime, // Use the calculated expiration time
       })
-      .redirect(process.env.DEV_FRONTEND_URL);
+      .redirect(process.env.PROD_FRONTEND_URL);
   } catch (error) {
     console.error("Error exchanging authorization code:", error);
     // Handle errors and send an appropriate response to the frontend
