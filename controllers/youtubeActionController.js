@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import { Workspace } from "../models/Workspace.js";
 import { google } from "googleapis";
-import { oauth2Client } from "../routes/googleCallbackRouter.js";
+import { oauth2Client } from "../server.js";
 import axios from "axios";
 import { Readable } from "stream";
 

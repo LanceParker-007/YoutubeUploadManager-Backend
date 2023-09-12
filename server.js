@@ -2,11 +2,20 @@ import { S3Client } from "@aws-sdk/client-s3";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import cloudinary from "cloudinary";
+import { google } from "googleapis";
 
+let oauth2Client = null;
 let s3Client = null;
 
 try {
   connectDB();
+
+  oauth2Client = new google.auth.OAuth2(
+    process.env.CLIENT_ID,
+    process.env.CLIENT_SECRET,
+    process.env.DEV_REDIRECT_URI // Change According to user
+  );
+
   s3Client = new S3Client({
     region: "ap-south-1",
     credentials: {
@@ -28,4 +37,4 @@ try {
   console.log(error.message);
 }
 
-export { s3Client };
+export { s3Client, oauth2Client };

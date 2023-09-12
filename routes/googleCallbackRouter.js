@@ -1,12 +1,12 @@
 import axios from "axios";
 import express from "express";
 import jwt from "jsonwebtoken";
-import { google } from "googleapis";
+import Cookies from "js-cookie";
 
 const router = express.Router();
 
 // ----------------------------------------------------------------
-let oauth2Client;
+
 // ----------------------------------------------------------------
 
 let ytAccessToken = null;
@@ -14,11 +14,6 @@ let ytAccessTokenCreatedTime = null;
 
 // Define your Google OAuth callback route
 router.get("/google/callback", async (req, res) => {
-  oauth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
-    process.env.CLIENT_SECRET,
-    process.env.PROD_REDIRECT_URI // Change According to user
-  );
   const authorizationCode = req.query.code;
 
   // Make sure the token endpoint URL is correct
@@ -28,7 +23,7 @@ router.get("/google/callback", async (req, res) => {
     code: authorizationCode,
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
-    redirect_uri: process.env.PROD_REDIRECT_URI, //userserverRedirectURI
+    redirect_uri: process.env.DEV_REDIRECT_URI, //userserverRedirectURI
     grant_type: "authorization_code",
   };
 
@@ -51,7 +46,18 @@ router.get("/google/callback", async (req, res) => {
     ytAccessToken = access_token;
     ytAccessTokenCreatedTime = new Date().getTime();
 
-    return res.redirect(process.env.PROD_FRONTEND_URL);
+    // return res.redirect(process.env.DEV_FRONTEND_URL);
+    const expirationTime = new Date();
+    expirationTime.setHours(expirationTime.getHours() + 1);
+
+    return res
+      .cookie("yt_access_token", access_token, {
+        httpOnly: false,
+        secure: true, // Set to true in production
+        sameSite: "lax",
+        expires: expirationTime, // Use the calculated expiration time
+      })
+      .redirect(process.env.DEV_FRONTEND_URL);
   } catch (error) {
     console.error("Error exchanging authorization code:", error);
     // Handle errors and send an appropriate response to the frontend
@@ -62,6 +68,8 @@ router.get("/google/callback", async (req, res) => {
 });
 
 router.get("/getytaccesstoken", (req, res) => {
+  // const { yt_access_token } = req.cookies();
+  // console.log("Cookie-TOken", yt_access_token);
   const currentTime = new Date().getTime();
   const elapsedTimeInSeconds = (currentTime - ytAccessTokenCreatedTime) / 1000;
 
@@ -79,4 +87,3 @@ router.get("/getytaccesstoken", (req, res) => {
 });
 
 export default router;
-export { oauth2Client };
