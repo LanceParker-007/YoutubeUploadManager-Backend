@@ -51,7 +51,7 @@ router.get("/google/callback", async (req, res) => {
       .cookie("yt_access_token", access_token, {
         secure: true, // Set to true in deployment
         sameSite: "none",
-        domain: "https://yum-frontend.vercel.app",
+        domain: "yum-frontend.vercel.app",
         expires: expirationTime, // Use the calculated expiration time
       })
       .redirect(process.env.PROD_FRONTEND_URL);
