@@ -10,6 +10,7 @@ let ytAccessTokenCreatedTime = null;
 
 // Define your Google OAuth callback route
 router.get("/google/callback", async (req, res) => {
+  console.log(req.user);
   const authorizationCode = req.query.code;
 
   // Make sure the token endpoint URL is correct
@@ -46,12 +47,11 @@ router.get("/google/callback", async (req, res) => {
     const expirationTime = new Date();
     expirationTime.setHours(expirationTime.getHours() + 1);
 
-    Cookies.set();
     return res
       .cookie("yt_access_token", access_token, {
-        httpOnly: false,
-        secure: true, // Set to true in production
+        secure: true, // Set to true in deployment
         sameSite: "none",
+        domain: "https://yum-frontend.vercel.app",
         expires: expirationTime, // Use the calculated expiration time
       })
       .redirect(process.env.PROD_FRONTEND_URL);
