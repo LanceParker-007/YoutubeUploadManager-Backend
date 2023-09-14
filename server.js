@@ -10,10 +10,11 @@ let s3Client = null;
 try {
   connectDB();
 
+  //jab se frontend se sign in kar rahe tab se iske redirect uri ka fark hi nahi pad raha
   oauth2Client = new google.auth.OAuth2(
     process.env.CLIENT_ID,
     process.env.CLIENT_SECRET,
-    process.env.PROD_REDIRECT_URI // Change According to user
+    process.env.PROD_REDIRECT_URI // Can Change According if required or not,
   );
 
   s3Client = new S3Client({
