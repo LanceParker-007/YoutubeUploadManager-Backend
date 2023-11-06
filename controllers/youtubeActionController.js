@@ -4,6 +4,14 @@ import { google } from "googleapis";
 import { oauth2Client } from "../server.js";
 import axios from "axios";
 import { Readable } from "stream";
+import crypto from "crypto-js";
+
+const secretKey = "secretKey"; // Must be the same key used on the client side
+
+const decryptToken = (encryptedToken) => {
+  const bytes = crypto.AES.decrypt(encryptedToken, secretKey);
+  return bytes.toString(crypto.enc.Utf8);
+};
 
 //Old Version: Upload video to youtube //Shift to new Controller(Youtube Function Controller)
 // export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
@@ -155,8 +163,10 @@ const uploadVideoInChunks = asyncHandler(
 // -----
 
 export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
-  const { selectedWorkspaceId, videoId, accessToken } = req.body;
+  let { selectedWorkspaceId, videoId, accessToken } = req.body;
 
+  accessToken = decryptToken(accessToken);
+  console.log("accessToken: ", accessToken);
   const workspace = await Workspace.findById(selectedWorkspaceId);
   let videoFound = null;
   videoFound = workspace.videos.filter(
@@ -204,10 +214,12 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
   };
   const data = {
     snippet: {
-      categoryId: "22",
-      description: "Description of uploaded video.",
-      title: "Test video upload try 2.",
+      title: videoFound[0].title,
+      description: videoFound[0].description ? videoFound[0].description : "",
+      tags: videoFound[0].tags ? videoFound[0].tags : [],
+      categoryId: videoFound[0].category,
     },
+    // Set the video privacy status
     status: {
       privacyStatus: "private",
     },
@@ -232,9 +244,9 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
     );
     // console.log("Main Response", mainResponse);
 
-    videoFound[0].youtubeId = mainResponse.data.id;
-    videoFound[0].status = true;
-    await workspace.save();
+    // videoFound[0].youtubeId = mainResponse.data.id;
+    // videoFound[0].status = true;
+    // await workspace.save();
 
     res.status(200).json({
       success: true,
