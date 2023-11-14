@@ -244,9 +244,9 @@ export const uploadVideoToYoutube = asyncHandler(async (req, res) => {
     );
     // console.log("Main Response", mainResponse);
 
-    // videoFound[0].youtubeId = mainResponse.data.id;
-    // videoFound[0].status = true;
-    // await workspace.save();
+    videoFound[0].youtubeId = mainResponse.data.id;
+    videoFound[0].status = true;
+    await workspace.save();
 
     res.status(200).json({
       success: true,
